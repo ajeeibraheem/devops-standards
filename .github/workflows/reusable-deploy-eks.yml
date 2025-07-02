@@ -1,0 +1,37 @@
+name: Reusable EKS Deployment
+
+on:
+  workflow_call:
+    inputs:
+      app_name:
+        required: true
+        type: string
+      image_tag:
+        required: true
+        type: string
+      namespace:
+        required: true
+        type: string
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Configure kubectl
+        uses: aws-actions/configure-aws-credentials@v3
+        with:
+          aws-region: us-east-1
+          role-to-assume: arn:aws:iam::<account-id>:role/<eks-role>
+
+      - name: Set kubectl context
+        run: |
+          aws eks update-kubeconfig --region us-east-1 --name my-cluster
+
+      - name: Deploy Helm Chart
+        run: |
+          helm upgrade --install ${{ inputs.app_name }} ./helm-charts/common-chart \
+            --namespace ${{ inputs.namespace }} \
+            --set image.tag=${{ inputs.image_tag }}

@@ -1,0 +1,30 @@
+name: Python Lambda CI/CD
+
+on:
+  push:
+    branches:
+      - main
+      - develop
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+      - name: Lint
+        run: pylint *.py
+      - name: Package Lambda
+        run: zip -r function.zip .
+
+  publish:
+    needs: build
+    uses: org/devops-standards/.github/workflows/reusable-publish-artifact.yml@main
+    with:
+      artifact_name: ${{ github.repository }}-lambda
+      path: function.zip

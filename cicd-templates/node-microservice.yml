@@ -1,0 +1,46 @@
+name: Node.js Microservice CI/CD
+
+on:
+  push:
+    branches:
+      - main
+      - develop
+  pull_request:
+
+jobs:
+  install:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+
+      - run: npm install
+
+  test:
+    needs: install
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: npm test
+
+  docker-lint:
+    uses: org/devops-standards/.github/workflows/reusable-lint-docker.yml@main
+
+  publish:
+    needs: test
+    uses: org/devops-standards/.github/workflows/reusable-publish-artifact.yml@main
+    with:
+      artifact_name: ${{ github.repository }}-bundle
+      path: dist/
+
+  deploy:
+    needs: publish
+    uses: org/devops-standards/.github/workflows/reusable-deploy-eks.yml@main
+    with:
+      app_name: ${{ github.repository }}
+      image_tag: ${{ github.sha }}
+      namespace: production

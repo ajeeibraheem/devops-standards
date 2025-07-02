@@ -1,0 +1,33 @@
+name: Java Microservice CI/CD
+
+on:
+  push:
+    branches:
+      - main
+      - develop
+  pull_request:
+
+jobs:
+  build-and-deploy:
+    uses: org/devops-standards/.github/workflows/reusable-build-java.yml@main
+    with:
+      app_name: ${{ github.repository }}
+      environment: ${{ github.ref_name }}
+
+  docker-lint:
+    uses: org/devops-standards/.github/workflows/reusable-lint-docker.yml@main
+
+  publish:
+    needs: build-and-deploy
+    uses: org/devops-standards/.github/workflows/reusable-publish-artifact.yml@main
+    with:
+      artifact_name: ${{ github.repository }}-jar
+      path: build/libs/
+
+  deploy:
+    needs: publish
+    uses: org/devops-standards/.github/workflows/reusable-deploy-eks.yml@main
+    with:
+      app_name: ${{ github.repository }}
+      image_tag: ${{ github.sha }}
+      namespace: production

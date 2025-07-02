@@ -1,0 +1,4 @@
+APP_ENV: development
+LOG_LEVEL: INFO
+RETRY_COUNT: 3
+DATABASE_URL: '{{ssm:/configs/{{app_name}}/db_url}}'

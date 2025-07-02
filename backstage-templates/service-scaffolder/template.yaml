@@ -1,0 +1,46 @@
+apiVersion: scaffolder.backstage.io/v1beta3
+kind: Template
+metadata:
+  name: create-java-service
+  title: Create Java Microservice
+  description: Scaffold a new Java-based microservice with standard DevOps
+spec:
+  owner: platform-team
+  type: service
+
+  parameters:
+    - title: Microservice Info
+      required:
+        - name
+        - owner
+      properties:
+        name:
+          type: string
+          description: Name of the new service
+        owner:
+          type: string
+          description: Team or individual owning the service
+
+  steps:
+    - id: fetch-template
+      name: Fetch base template
+      action: fetch:template
+      input:
+        url: ./skeleton
+        targetPath: ./
+
+    - id: template-engine
+      name: Customize service files
+      action: template:file
+      input:
+        path: '**/*.{yaml,yml,gradle,java,md}'
+        values:
+          name: ${{ parameters.name }}
+          owner: ${{ parameters.owner }}
+
+    - id: register
+      name: Register with Backstage catalog
+      action: catalog:register
+      input:
+        repoContentsUrl: https://github.com/my-org/${{ parameters.name }}
+        catalogInfoPath: catalog-info.yaml
